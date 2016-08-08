@@ -22,6 +22,20 @@ class BookProgressActor(file: File, userId: String, title: String) extends Actor
   var status: String = "";
   var data: ListBuffer[BookWord] = ListBuffer[BookWord]()
 
+  implicit val writer = new Writes[BookWord] {
+    def writes(word: (BookWord)): JsValue = {
+      Json.obj(
+        "word" -> word.word,
+        "tag" -> word.tag,
+        "freq" -> word.freq,
+        "definitions" -> Json.arr(word.definition),
+        "pronunciations" -> Json.arr(word.pronunciation),
+        "examples" -> Json.arr(word.example)
+      )
+    }
+  }
+
+
   def receive = {
     case percent: Int => {
       if (currentProgress > -1)
