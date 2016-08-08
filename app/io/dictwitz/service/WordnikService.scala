@@ -1,10 +1,10 @@
-package io.bookwitz.service
+package io.dictwitz.service
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.stream.ActorMaterializer
-import io.bookwitz.models._
+import io.dictwitz.models._
 import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
@@ -23,7 +23,7 @@ object WordnikService {
       .withQuery(
         Uri.Query(
           "api_key" -> "a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5",
-          "limit" -> "10"
+          "limit" -> "3"
         )
       )
     HttpRequest(uri = url)

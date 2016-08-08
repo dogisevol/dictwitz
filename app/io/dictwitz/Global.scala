@@ -1,4 +1,4 @@
-package io.bookwitz
+package io.dictwitz
 
 object Global extends play.api.GlobalSettings {
 }

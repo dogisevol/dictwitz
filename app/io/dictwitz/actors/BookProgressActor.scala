@@ -1,10 +1,10 @@
-package io.bookwitz.actors
+package io.dictwitz.actors
 
 import java.io.File
 
 import akka.actor.{Actor, ActorRef, Props}
-import io.bookwitz.controllers.BookController
-import io.bookwitz.models.BookWord
+import io.dictwitz.controllers.BookController
+import io.dictwitz.models.BookWord
 import play.api.libs.iteratee.Concurrent
 import play.api.libs.json._
 

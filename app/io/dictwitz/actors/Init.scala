@@ -1,4 +1,4 @@
-package io.bookwitz.actors
+package io.dictwitz.actors
 
 import play.api.libs.iteratee.Concurrent
 import play.api.libs.json.JsValue

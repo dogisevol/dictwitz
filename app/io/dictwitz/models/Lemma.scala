@@ -1,4 +1,4 @@
-package io.bookwitz.models
+package io.dictwitz.models
 
 import edu.stanford.nlp.ling.TaggedWord
 

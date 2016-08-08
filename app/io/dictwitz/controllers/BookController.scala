@@ -1,4 +1,4 @@
-package io.bookwitz.controllers
+package io.dictwitz.controllers
 
 
 import java.io.File
@@ -6,7 +6,7 @@ import java.io.File
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-import io.bookwitz.actors.BookProgressActor
+import io.dictwitz.actors.BookProgressActor
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Concurrent

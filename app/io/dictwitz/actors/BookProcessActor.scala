@@ -1,4 +1,4 @@
-package io.bookwitz.actors
+package io.dictwitz.actors
 
 import java.io.{File, _}
 import java.util._
@@ -7,8 +7,8 @@ import akka.actor.Actor
 import edu.illinois.cs.cogcomp.edison.utilities.POSUtils
 import edu.illinois.cs.cogcomp.nlp.lemmatizer.{MorphaStemmer, WordnetLemmaReader}
 import edu.stanford.nlp.tagger.maxent.MaxentTagger
-import io.bookwitz.models.{BookWord, Lemma}
-import io.bookwitz.service.WordnikService
+import io.dictwitz.models.{BookWord, Lemma}
+import io.dictwitz.service.WordnikService
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global

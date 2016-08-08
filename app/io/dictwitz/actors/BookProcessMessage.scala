@@ -1,4 +1,4 @@
-package io.bookwitz.actors
+package io.dictwitz.actors
 
 case class BookProcessMessage(text: Any, percent: Any)
 
