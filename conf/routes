@@ -1,1 +1,2 @@
 POST       /bookUpload                @io.bookwitz.controllers.BookController.bookUpload
+GET        /bookUpload                @io.bookwitz.controllers.BookController.bookUpload(uuid: String)
