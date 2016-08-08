@@ -50,7 +50,7 @@ class BookController() extends Controller {
   def bookProcessProgress(uuid: String) = Action.async { request => {
     val actorPath: ActorPath = BookController.system / uuid
     val actorSelection = BookController.system.actorSelection(actorPath)
-    val future = actorSelection.resolveOne(10 second)
+    val future = actorSelection.resolveOne(20 second)
 
     future onFailure {
       case actorRef => {
