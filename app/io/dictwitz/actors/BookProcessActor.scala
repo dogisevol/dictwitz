@@ -14,12 +14,11 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 
-//remove if not needed
 import scala.collection.JavaConversions._
 
 object BookProcessActor {
 
-  private var tags: List[String] = new ArrayList[String]()
+  private val tags: List[String] = new ArrayList[String]()
 
   private var verbLemmaMap: Map[String, String] = _
 
@@ -44,9 +43,9 @@ object BookProcessActor {
   tags.add("VBP")
 
   try {
-    loadVerbMap(classOf[BookProcessActor].getClassLoader.getResource("resources/verb-lemDict.txt")
+    loadVerbMap(classOf[BookProcessActor].getClassLoader.getResource("/resources/verb-lemDict.txt")
       .getFile)
-    loadExceptionMap(classOf[BookProcessActor].getClassLoader.getResource("resources/exceptions.txt")
+    loadExceptionMap(classOf[BookProcessActor].getClassLoader.getResource("/resources/exceptions.txt")
       .getFile)
     wordNetPath = classOf[BookProcessActor].getResource("/resources/WordNet-3.0/dict/")
       .getFile
