@@ -7,11 +7,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import io.bookwitz.actors.BookProgressActor
-import io.bookwitz.models.BooksTableQueries.{bookWordsList, booksList, dictionaryWordsList}
-import io.bookwitz.models.{Book, BookWord}
 import play.api.Logger
-import play.api.Play.current
-import play.api.db.DB
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Concurrent
 import play.api.libs.json.{JsValue, Json, Writes}
@@ -20,7 +16,6 @@ import play.api.mvc.{Action, Controller}
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.slick.driver.JdbcDriver.simple._
 
 
 object BookController {
@@ -33,33 +28,12 @@ class BookController() extends Controller {
   val logger = Logger(getClass)
   var progressChannel: Concurrent.Channel[JsValue] = null
 
-  def books = Action { request => {
-    Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-      implicit val writes = Json.writes[Book]
-      Ok(Json.stringify(Json.toJson(booksList.list)))
-    }
-  }
-  }
-
-
   implicit val writer = new Writes[(Long, String, String, Long)] {
     def writes(t: (Long, String, String, Long)): JsValue = {
       Json.obj("bookId" -> t._1, "word" -> t._2, "tag" -> t._3, "freq" -> t._4)
     }
   }
 
-  def bookWords(bookId: Long) = Action { request => {
-    Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-      implicit val writes = Json.writes[BookWord]
-
-
-      val innerJoin = for {
-        (b, d) <- bookWordsList join dictionaryWordsList on (_.word === _.id)
-      } yield (b.bookId, d.word, b.tagColumn, b.freq)
-      Ok(Json.stringify(Json.toJson(innerJoin.filter(_._1 === bookId).list)))
-    }
-  }
-  }
 
   def bookUpload = Action { request => {
     val (progressEnumerator, progressChannel) = Concurrent.broadcast[JsValue]

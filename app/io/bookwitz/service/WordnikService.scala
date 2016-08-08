@@ -4,10 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.stream.ActorMaterializer
-import io.bookwitz.models.BooksTableQueries._
 import io.bookwitz.models._
-import play.api.Play.current
-import play.api.db.DB
 import play.api.db.slick.{Database => _}
 import play.api.libs.json._
 
@@ -15,25 +12,18 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.slick.driver.JdbcDriver.simple._
 
 object WordnikService {
 
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-  private var wordService: WordService = _
 
   private def getRequest(word: String, operation: String, map: Map[String, String]): HttpRequest = {
-    if (wordService == null) Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-      wordService = servicesList
-        .filter(_.name === "wordnik").firstOption.get
-    }
-
-    val url = Uri(wordService.url + word + "/" + operation)
+    val url = Uri("http://api.wordnik.com:80/v4/word.json/" + word + "/" + operation)
       .withQuery(
         Uri.Query(
-          "api_key" -> wordService.key,
+          "api_key" -> "a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5",
           "limit" -> "10"
         )
       )
@@ -50,7 +40,7 @@ object WordnikService {
   }
 
   def transformDefinitions(node: JsValue): List[String] = {
-    val result: ListBuffer[String] = ListBuffer();
+    val result: ListBuffer[String] = ListBuffer()
     (node \\ "text").foreach(
       text =>
         result += text.as[String]
@@ -80,48 +70,30 @@ object WordnikService {
     )
   }
 
-  def getDictionaryEntry(word: String): Future[Option[Long]] = {
-    Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-      dictionaryWordsList.filter(d => d.word === word).firstOption match {
-        case Some(d) =>
-          Future(d.id)
-        case _ => {
-          createDictionaryRecord(WordDictionary(None, word))
+  def getDictionaryEntry(lemma: Lemma): Future[BookWord] = Future successful {
+    val result = BookWord(lemma.getWord.word(), lemma.getWord.tag(), lemma.getCount, ListBuffer[String](),
+      ListBuffer[String](), ListBuffer[String]())
+    val word: String = lemma.getWord.word()
+    getDefinitions(word) onSuccess {
+      case wordDefinitions => wordDefinitions.foreach(
+        text =>
+          result.definition += text
+      )
+    }
+
+    getPronunciations(word) onSuccess {
+      case wordPronunciation =>
+        if (wordPronunciation.isDefined) {
+          result.pronunciation += wordPronunciation.get
         }
-      }
     }
+
+    getTopExample(word) onSuccess {
+      case wordExample =>
+        if (wordExample.isDefined)
+          result
+    }
+    result
   }
 
-  def createDictionaryRecord(word: WordDictionary): Future[Option[Long]] = Future successful {
-    val wordId = Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-      (dictionaryWordsList returning dictionaryWordsList.map(_.id)) += word
-    }
-
-    Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-      getDefinitions(word.word) onSuccess {
-        case wordDefinitions => wordDefinitions.foreach(
-          text =>
-            wordDefinitionsList += WordDefinition(None, wordId.get, text)
-        )
-      }
-    }
-
-    Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-      getPronunciations(word.word) onSuccess {
-        case wordPronunciation =>
-          if (wordPronunciation.isDefined)
-            wordPronunciationList += WordPronunication(None, wordId.get, wordPronunciation.get)
-      }
-    }
-
-    Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-      getTopExample(word.word) onSuccess {
-        case wordExample =>
-          if (wordExample.isDefined)
-            wordExamplesList += WordExample(None, wordId.get, wordExample.get)
-      }
-    }
-
-    wordId
-  }
 }

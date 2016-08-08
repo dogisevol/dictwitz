@@ -4,8 +4,11 @@ import java.io.File
 
 import akka.actor.{Actor, ActorRef, Props}
 import io.bookwitz.controllers.BookController
+import io.bookwitz.models.BookWord
 import play.api.libs.iteratee.Concurrent
 import play.api.libs.json._
+
+import scala.collection.mutable.ListBuffer
 
 /**
   * Created by AVEKAUA on 7/06/2016.
@@ -17,11 +20,16 @@ class BookProgressActor(file: File, userId: String, title: String) extends Actor
   var currentProgress = 0
   var error: Exception = null
   var status: String = "";
+  var data: ListBuffer[BookWord] = ListBuffer[BookWord]()
 
   def receive = {
     case percent: Int => {
       if (currentProgress > -1)
         currentProgress = percent
+    }
+
+    case bookWords: ListBuffer[BookWord] => {
+      data = bookWords
     }
 
     case errorMsg: Exception => {
@@ -44,7 +52,8 @@ class BookProgressActor(file: File, userId: String, title: String) extends Actor
       val result: JsValue = JsObject(
         Seq(
           "progress" -> JsNumber(currentProgress),
-          "status" -> JsString(status)
+          "status" -> JsString(status),
+          "data" -> Json.toJson(data)
         )
       )
       sender ! Json.stringify(result)

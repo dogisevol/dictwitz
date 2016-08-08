@@ -7,15 +7,12 @@ import akka.actor.Actor
 import edu.illinois.cs.cogcomp.edison.utilities.POSUtils
 import edu.illinois.cs.cogcomp.nlp.lemmatizer.{MorphaStemmer, WordnetLemmaReader}
 import edu.stanford.nlp.tagger.maxent.MaxentTagger
-import io.bookwitz.models.BooksTableQueries.{bookWordsList, booksList}
-import io.bookwitz.models.{Book, BookWord, Lemma}
+import io.bookwitz.models.{BookWord, Lemma}
 import io.bookwitz.service.WordnikService
-import play.api.Play.current
-import play.api.db.DB
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
-import scala.slick.driver.JdbcDriver.simple._
 
 //remove if not needed
 import scala.collection.JavaConversions._
@@ -138,18 +135,13 @@ class BookProcessActor(file: File, userId: String, title: String) extends Actor 
             }
         }
         file.delete()
-        sender ! "storing"
-        val bookId = Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-          (booksList returning booksList.map(_.id)) += Book(None, title, userId)
-        }
         var i = 0;
+        val wordsList = ListBuffer[BookWord]()
         map.foreach { case (key, value) => {
-          WordnikService.getDictionaryEntry(value.getWord.word()).onComplete(
+          WordnikService.getDictionaryEntry(value).onComplete(
             result =>
               if (result.isSuccess && result.get.isDefined) {
-                Database.forDataSource(DB.getDataSource()) withSession { implicit session =>
-                  bookWordsList += BookWord(bookId.get, result.get.get, value.getWord.tag(), value.getCount)
-                }
+                wordsList += result.get.get
               }
           )
           i = i + 1
@@ -157,6 +149,7 @@ class BookProcessActor(file: File, userId: String, title: String) extends Actor 
         }
         }
 
+        sender ! wordsList
         sender ! 100
         context stop self
       } catch {
