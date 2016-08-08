@@ -64,7 +64,8 @@ class BookProgressActor(file: File, title: String) extends Actor with akka.actor
         Seq(
           "progress" -> JsNumber(currentProgress),
           "status" -> JsString(status),
-          "data" -> Json.toJson(data)
+          "data" -> Json.toJson(data),
+          "error" -> JsString(error.getMessage)
         )
       )
       sender ! Json.stringify(result)
