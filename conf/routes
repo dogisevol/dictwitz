@@ -1,0 +1,1 @@
+POST       /bookUpload                @io.bookwitz.controllers.BookController.bookUpload
