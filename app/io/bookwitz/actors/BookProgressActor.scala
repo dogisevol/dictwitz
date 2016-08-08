@@ -10,10 +10,7 @@ import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
 
-/**
-  * Created by AVEKAUA on 7/06/2016.
-  */
-class BookProgressActor(file: File, userId: String, title: String) extends Actor with akka.actor.ActorLogging {
+class BookProgressActor(file: File, title: String) extends Actor with akka.actor.ActorLogging {
 
   var progressChannel: Concurrent.Channel[JsValue] = null
   var processActor: ActorRef = null
@@ -77,7 +74,7 @@ class BookProgressActor(file: File, userId: String, title: String) extends Actor
     }
 
     case "start" => {
-      processActor = BookController.system.actorOf(Props(new BookProcessActor(file, userId, title)))
+      processActor = BookController.system.actorOf(Props(new BookProcessActor(file, title)))
       processActor ! 0
       status = "Processing."
     }

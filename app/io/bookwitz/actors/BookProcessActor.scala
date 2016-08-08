@@ -81,7 +81,7 @@ object BookProcessActor {
 }
 
 
-class BookProcessActor(file: File, userId: String, title: String) extends Actor {
+class BookProcessActor(file: File, title: String) extends Actor {
 
   private var wnLemmaReader: WordnetLemmaReader = _
 
@@ -178,6 +178,7 @@ class BookProcessActor(file: File, userId: String, title: String) extends Actor 
     toStanford.put("them", "they")
     toStanford.put("me", "i")
     toStanford.put("an", "a")
+    ()
   }
 
   def getLemma(word: String, pos: String): String = {

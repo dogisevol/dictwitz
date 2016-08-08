@@ -42,7 +42,7 @@ class BookController() extends Controller {
     val newFile = new File(file.getParentFile, uuid)
     file.renameTo(newFile)
     val title = request.body.asMultipartFormData.get.files.head.filename
-    BookController.system.actorOf(Props(new BookProgressActor(newFile, request.queryString.get("userId").get.head, title)), uuid) ! "start"
+    BookController.system.actorOf(Props(new BookProgressActor(newFile, title)), uuid) ! "start"
     Ok(uuid);
   }
   }
