@@ -140,8 +140,8 @@ class BookProcessActor(file: File, userId: String, title: String) extends Actor 
         map.foreach { case (key, value) => {
           WordnikService.getDictionaryEntry(value).onComplete(
             result =>
-              if (result.isSuccess && result.get.isDefined) {
-                wordsList += result.get.get
+              if (result.isSuccess) {
+                wordsList += result.get
               }
           )
           i = i + 1
@@ -161,7 +161,7 @@ class BookProcessActor(file: File, userId: String, title: String) extends Actor 
     }
   }
 
-  private def init() {
+  private def init(): Unit = {
     wnLemmaReader = new WordnetLemmaReader(BookProcessActor.wordNetPath)
     contractions = new HashMap[String, String]()
     contractions.put("'d", "have")
