@@ -5,7 +5,6 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.stream.ActorMaterializer
 import io.bookwitz.models._
-import play.api.db.slick.{Database => _}
 import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
