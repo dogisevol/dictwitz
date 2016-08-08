@@ -53,3 +53,11 @@ unmanagedJars in Compile ++= {
 }
 
 herokuAppName in Compile := "still-plains-63986"
+
+herokuProcessTypes in Compile := Map(
+  "web" -> "target/universal/stage/bin/"
+)
+
+herokuIncludePaths in Compile := Seq(
+  "target/universal/stage"
+)
