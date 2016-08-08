@@ -1,36 +1,30 @@
-name := """bookwitz"""
+name := """dictwitz"""
 
-organization in ThisBuild := "io.bookwitz"
+organization in ThisBuild := "io.dictwitz"
 
 version in ThisBuild := "0.0.1"
 
 scalaVersion in ThisBuild := "2.11.2"
 
-startYear := Some(2013)
+startYear := Some(2016)
 
-homepage := Some(url("https://blablabla"))
-
-licenses := Seq("GNU AFFERO GENERAL PUBLIC LICENSE, Version 3" -> url("http://www.gnu.org/licenses/agpl-3.0.txt"))
+homepage := Some(url("https://still-plains-63986.herokuapp.com/"))
 
 resolvers in ThisBuild += Resolver.url("Edulify Repository", url("http://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns)
 
 libraryDependencies in ThisBuild ++= Seq(
   cache,
-  jdbc,
-  "javax.inject" % "javax.inject" % "1",
+  //jdbc,
+  //"javax.inject" % "javax.inject" % "1",
   "com.typesafe.akka" % "akka-http-core-experimental_2.11" % "2.0.4",
   "com.typesafe.akka" % "akka-stream-experimental_2.11" % "2.0.4",
-  "com.typesafe.play" %% "play-slick" % "0.8.0",
-  "com.edulify" %% "play-hikaricp" % "1.4.1",
   "edu.stanford.nlp" % "stanford-corenlp" % "3.6.0"
 )
-
-libraryDependencies += "edu.stanford.nlp" % "stanford-corenlp" % "3.6.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
 // http://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
-libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.8.11.2"
+//libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.8.11.2"
 
 
 pipelineStages := Seq(rjs, digest, gzip)
