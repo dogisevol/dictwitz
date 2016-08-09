@@ -51,6 +51,7 @@ object BookProcessActor {
     wordNetPath = Play.application().getFile("resources/WordNet-3.0/dict/")
       .getAbsolutePath
     logger.info("wordNetPath is set: " + wordNetPath)
+    logger.info("wordNetPath is dir: " + Play.application().getFile("resources/WordNet-3.0/dict/").isDirectory)
   } catch {
     case e: Exception => logger.error("Cannot initialize lemmatizer", e)
   }
@@ -65,10 +66,11 @@ object BookProcessActor {
           exceptionsMap.put(parts(0), parts(1))
         }
     }
+    logger.info("exeptions map: " + exceptionsMap)
   }
 
   private def loadVerbMap(file: File) {
-    logger.info("Start loading verb map: " + file.getAbsolutePath)
+    logger.info("Start loading verb maps: " + file.getAbsolutePath)
     verbLemmaMap = new HashMap[String, String]()
     verbBaseMap = new HashMap[String, String]()
     Source.fromFile(file).getLines().foreach {
