@@ -47,7 +47,7 @@ object BookProcessActor {
       .getFile)
     loadExceptionMap(Play.application().classloader().getResource("resources/exceptions.txt")
       .getFile)
-    wordNetPath = Play.application().classloader().getResource("/resources/WordNet-3.0/dict/")
+    wordNetPath = Play.application().classloader().getResource("resources/WordNet-3.0/dict/")
       .getFile
   } catch {
     case e: Exception => System.out.print(e.toString)
@@ -92,7 +92,7 @@ class BookProcessActor(file: File, title: String) extends Actor {
 
 
   def processFile() = {
-    if (BookProcessActor.verbLemmaMap != null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
+    if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
       sender ! new Exception("Wrong lemmatizer configuration"
         + Play.application().resource(".").getFile
