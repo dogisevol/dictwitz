@@ -43,11 +43,11 @@ object BookProcessActor {
   tags.add("VBP")
 
   try {
-    loadVerbMap(Play.application().resource("resources/verb-lemDict.txt")
+    loadVerbMap(ClassLoader.getSystemClassLoader().getResource("resources/verb-lemDict.txt")
       .getFile)
-    loadExceptionMap(Play.application().resource("resources/exceptions.txt")
+    loadExceptionMap(ClassLoader.getSystemClassLoader().getResource("resources/exceptions.txt")
       .getFile)
-    wordNetPath = Play.application().resource("resources/WordNet-3.0/dict/")
+    wordNetPath = ClassLoader.getSystemClassLoader().getResource("resources/WordNet-3.0/dict/")
       .getFile
   } catch {
     case e: Exception => System.out.print(e.toString)
@@ -94,11 +94,19 @@ class BookProcessActor(file: File, title: String) extends Actor {
   def processFile() = {
     if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
-      sender ! new Exception("Wrong lemmatizer configuration" + Play.application().resource("resources"));
+      sender ! new Exception("Wrong lemmatizer configuration"
+        + ClassLoader.getSystemClassLoader()
+        + "||"
+        + ClassLoader.getSystemClassLoader().getResource("/")
+        + "||"
+        + ClassLoader.getSystemClassLoader().getResource("")
+        + "||"
+        + ClassLoader.getSystemClassLoader().getResource(".")
+      );
     } else {
       sender ! "processing"
       try {
-        val url = Play.application().classloader().getResource("resources/models/wsj-0-18-left3words-distsim.tagger")
+        val url =ClassLoader.getSystemClassLoader().getResource("resources/models/wsj-0-18-left3words-distsim.tagger")
         init()
 
         val tagger = new MaxentTagger(url.toString)
