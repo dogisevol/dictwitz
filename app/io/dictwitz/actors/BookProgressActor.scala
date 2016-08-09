@@ -60,17 +60,38 @@ class BookProgressActor(file: File, title: String) extends Actor with akka.actor
     }
 
     case "progress" => {
-      val result: JsValue = JsObject(
-        Seq(
-          "progress" -> JsNumber(currentProgress),
-          "status" -> JsString(status),
-          "data" -> Json.toJson(data),
-          "error" -> JsString(error.getMessage)
+      if (error != null) {
+        val result: JsValue = JsObject(
+          Seq(
+            "progress" -> JsNumber(currentProgress),
+            "status" -> JsString(status),
+            "error" -> JsString(error.getMessage)
+          )
         )
-      )
-      sender ! Json.stringify(result)
-      if (currentProgress == 100) {
-        context stop self
+        sender ! Json.stringify(result)
+
+      } else if (currentProgress < 100) {
+        val result: JsValue = JsObject(
+          Seq(
+            "progress" -> JsNumber(currentProgress),
+            "status" -> JsString(status)
+          )
+        )
+        sender ! Json.stringify(result)
+
+      } else {
+        val result: JsValue = JsObject(
+          Seq(
+            "progress" -> JsNumber(currentProgress),
+            "status" -> JsString(status),
+            "data" -> Json.toJson(data)
+          )
+        )
+        sender ! Json.stringify(result)
+        sender ! Json.stringify(result)
+        if (currentProgress == 100) {
+          context stop self
+        }
       }
     }
 
