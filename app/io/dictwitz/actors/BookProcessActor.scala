@@ -46,21 +46,19 @@ object BookProcessActor {
   tags.add("VBP")
 
   try {
-    loadVerbMap(Play.application().resource("resources/verb-lemDict.txt")
-      .getFile)
-    loadExceptionMap(Play.application().resource("resources/exceptions.txt")
-      .getFile)
-    wordNetPath = Play.application().resource("resources/WordNet-3.0/dict/")
-      .getFile
+    loadVerbMap(Play.application().getFile("resources/verb-lemDict.txt"))
+    loadExceptionMap(Play.application().getFile("resources/exceptions.txt"))
+    wordNetPath = Play.application().getFile("resources/WordNet-3.0/dict/")
+      .getAbsolutePath
     logger.info("wordNetPath is set: " + wordNetPath)
   } catch {
-    case e: Exception => System.out.print(e.toString)
+    case e: Exception => logger.error("Cannot initialize lemmatizer", e)
   }
 
-  private def loadExceptionMap(fileName: String) {
-    logger.info("Start loading exeptions map: " + fileName)
+  private def loadExceptionMap(file: File) {
+    logger.info("Start loading exeptions map: " + file.getAbsolutePath)
     exceptionsMap = new HashMap[String, String]()
-    Source.fromFile(fileName).getLines().foreach {
+    Source.fromFile(file).getLines().foreach {
       line =>
         if (line.length > 0) {
           val parts = line.split("\\s+")
@@ -69,11 +67,11 @@ object BookProcessActor {
     }
   }
 
-  private def loadVerbMap(fileName: String) {
-    logger.info("Start loading verb map: " + fileName)
+  private def loadVerbMap(file: File) {
+    logger.info("Start loading verb map: " + file.getAbsolutePath)
     verbLemmaMap = new HashMap[String, String]()
     verbBaseMap = new HashMap[String, String]()
-    Source.fromFile(fileName).getLines().foreach {
+    Source.fromFile(file).getLines().foreach {
       line =>
         if (line.length > 0) {
           val parts = line.split("\\s+")
@@ -101,15 +99,11 @@ class BookProcessActor(file: File, title: String) extends Actor {
     if (BookProcessActor.verbLemmaMap != null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
       sender ! new Exception("Wrong lemmatizer configuration"
-        + BookProcessActor.verbLemmaMap
-        +BookProcessActor.verbBaseMap
-        +BookProcessActor.exceptionsMap
-        +BookProcessActor.wordNetPath
       );
     } else {
       sender ! "processing"
       try {
-        val url = Play.application().classloader().getResource("resources/models/wsj-0-18-left3words-distsim.tagger")
+        val url = Play.application().getFile("resources/models/wsj-0-18-left3words-distsim.tagger")
         init()
 
         val tagger = new MaxentTagger(url.toString)
