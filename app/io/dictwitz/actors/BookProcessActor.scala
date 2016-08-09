@@ -47,7 +47,7 @@ object BookProcessActor {
       .getFile)
     loadExceptionMap(Play.application().classloader().getResource("resources/exceptions.txt")
       .getFile)
-    wordNetPath = classOf[BookProcessActor].getResource("/resources/WordNet-3.0/dict/")
+    wordNetPath = Play.application().classloader().getResource("/resources/WordNet-3.0/dict/")
       .getFile
   } catch {
     case e: Exception => System.out.print(e.toString)
@@ -96,15 +96,15 @@ class BookProcessActor(file: File, title: String) extends Actor {
       BookProcessActor.wordNetPath == null) {
       sender ! new Exception("Wrong lemmatizer configuration"
         + "|--|"
-        + Play.application().classloader().getResource("")
+        + Play.application().classloader()
         + "|--|"
         + Play.application().classloader().getResource(".")
         + "|--|"
         + Play.application().classloader().getResource("")
         + "|--|"
-        + Play.application().classloader().getResource("resource")
+        + Play.application().classloader().getResource("resources")
         + "|--|"
-        + classOf[BookProcessActor].getResource("/resource")
+        + classOf[BookProcessActor].getResource("/resources")
       );
     } else {
       sender ! "processing"
