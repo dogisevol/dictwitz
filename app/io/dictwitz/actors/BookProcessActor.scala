@@ -95,9 +95,11 @@ class BookProcessActor(file: File, title: String) extends Actor {
     if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
       sender ! new Exception("Wrong lemmatizer configuration"
-        + Play.application().classloader().getResource("resources/verb-lemDict.txt")
+        + Play.application().resource(".").getFile
         + "|--|"
-        + Play.application().classloader().getResourceAsStream("resources/verb-lemDict.txt")
+        + Play.application().resource("/").getFile
+        + "|--|"
+        + Play.application().resource("resources/verb-lemDict.txt")
       );
     } else {
       sender ! "processing"

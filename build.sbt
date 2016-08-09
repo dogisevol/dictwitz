@@ -52,6 +52,9 @@ unmanagedJars in Compile ++= {
   customJars.classpath
 }
 
+unmanagedClasspath in Runtime += baseDirectory.value / "resources"
+
+
 herokuAppName in Compile := "still-plains-63986"
 
 herokuProcessTypes in Compile := Map(
