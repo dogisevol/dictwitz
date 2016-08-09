@@ -18,7 +18,7 @@ import scala.collection.JavaConversions._
 
 object BookProcessActor {
 
-  private val tags: List[String] = new ArrayList[String]()
+  private var tags: List[String] = new ArrayList[String]()
 
   private var verbLemmaMap: Map[String, String] = _
 
@@ -43,9 +43,9 @@ object BookProcessActor {
   tags.add("VBP")
 
   try {
-    loadVerbMap(classOf[BookProcessActor].getClassLoader.getResource("/resources/verb-lemDict.txt")
+    loadVerbMap(classOf[BookProcessActor].getClassLoader.getResource("resources/verb-lemDict.txt")
       .getFile)
-    loadExceptionMap(classOf[BookProcessActor].getClassLoader.getResource("/resources/exceptions.txt")
+    loadExceptionMap(classOf[BookProcessActor].getClassLoader.getResource("resources/exceptions.txt")
       .getFile)
     wordNetPath = classOf[BookProcessActor].getResource("/resources/WordNet-3.0/dict/")
       .getFile
@@ -94,7 +94,7 @@ class BookProcessActor(file: File, title: String) extends Actor {
   def processFile() = {
     if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
-      sender ! new Exception("Wrong lemmatizer configuration" + classOf[BookProcessActor].getClassLoader.getResource("").getFile);
+      sender ! new Exception("Wrong lemmatizer configuration");
     } else {
       sender ! "processing"
       try {
