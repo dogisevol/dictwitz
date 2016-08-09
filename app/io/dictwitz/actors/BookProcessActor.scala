@@ -95,8 +95,8 @@ class BookProcessActor(file: File, title: String) extends Actor {
     if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
       sender ! new Exception("Wrong lemmatizer configuration"
-        + Play.application().getFile("/resources")
-        + Play.application().getFile("resources")
+        + Play.application().getFile("/resources").exists()
+        + Play.application().getFile("resources").exists()
       );
     } else {
       sender ! "processing"
