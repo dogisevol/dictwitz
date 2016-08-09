@@ -1,1 +1,1 @@
-target/universal/stage/bin/dictwitz -Dhttp.port=%PORT%
+web:target\universal\stage\bin\dicwitz -Dhttp.port=9000
