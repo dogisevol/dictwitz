@@ -86,6 +86,8 @@ object BookProcessActor {
 
 class BookProcessActor(file: File, title: String) extends Actor {
 
+  val logger = Logger(getClass)
+
   private var wnLemmaReader: WordnetLemmaReader = _
 
   private var contractions: Map[String, String] = _
@@ -96,10 +98,11 @@ class BookProcessActor(file: File, title: String) extends Actor {
 
 
   def processFile() = {
-    if (BookProcessActor.verbLemmaMap != null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
+    if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
-      sender ! new Exception("Wrong lemmatizer configuration"
-      );
+      sender ! new Exception("Cannot configure lemmatizer")
+      if(BookProcessActor.verbLemmaMap == null)
+      logger.error("Wrong lemmatizer configuration")
     } else {
       sender ! "processing"
       try {
