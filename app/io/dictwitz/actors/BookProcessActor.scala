@@ -94,17 +94,11 @@ class BookProcessActor(file: File, title: String) extends Actor {
   def processFile() = {
     if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
-      sender ! new Exception("Wrong lemmatizer configuration"
-        + Play.application().resource(".").getFile
-        + "|--|"
-        + Play.application().resource("/").getFile
-        + "|--|"
-        + Play.application().resource("resources/verb-lemDict.txt")
-      );
+      sender ! new Exception("Wrong lemmatizer configuration");
     } else {
       sender ! "processing"
       try {
-        val url = getClass.getClassLoader.getResource("resources/models/wsj-0-18-left3words-distsim.tagger")
+        val url = Play.application().classloader().getResource("resources/models/wsj-0-18-left3words-distsim.tagger")
         init()
 
         val tagger = new MaxentTagger(url.toString)
