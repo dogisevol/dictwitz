@@ -1,0 +1,5 @@
+{
+  "name": "dictwitz",
+  "description": "dictwitz",
+  "image": "heroku/scala"
+}
