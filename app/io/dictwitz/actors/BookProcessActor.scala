@@ -94,7 +94,17 @@ class BookProcessActor(file: File, title: String) extends Actor {
   def processFile() = {
     if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
-      sender ! new Exception("Wrong lemmatizer configuration");
+      sender ! new Exception("Wrong lemmatizer configuration"
+        + classOf[BookProcessActor].getClassLoader.getResource("")
+        +"|--|"
+        + classOf[BookProcessActor].getClassLoader.getResource(".")
+        +"|--|"
+        + classOf[BookProcessActor].getClassLoader.getResource(".")
+        +"|--|"
+        + classOf[BookProcessActor].getClassLoader.getResource("resource")
+        +"|--|"
+        + classOf[BookProcessActor].getClassLoader.getResource("/resource")
+      );
     } else {
       sender ! "processing"
       try {
