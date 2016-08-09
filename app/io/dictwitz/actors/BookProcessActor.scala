@@ -9,12 +9,12 @@ import edu.illinois.cs.cogcomp.nlp.lemmatizer.{MorphaStemmer, WordnetLemmaReader
 import edu.stanford.nlp.tagger.maxent.MaxentTagger
 import io.dictwitz.models.{BookWord, Lemma}
 import io.dictwitz.service.WordnikService
+import play.Play
 
+import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
-
-import scala.collection.JavaConversions._
 
 object BookProcessActor {
 
@@ -43,9 +43,9 @@ object BookProcessActor {
   tags.add("VBP")
 
   try {
-    loadVerbMap(classOf[BookProcessActor].getClassLoader.getResource("resources/verb-lemDict.txt")
+    loadVerbMap(Play.application().classloader().getResource("resources/verb-lemDict.txt")
       .getFile)
-    loadExceptionMap(classOf[BookProcessActor].getClassLoader.getResource("resources/exceptions.txt")
+    loadExceptionMap(Play.application().classloader().getResource("resources/exceptions.txt")
       .getFile)
     wordNetPath = classOf[BookProcessActor].getResource("/resources/WordNet-3.0/dict/")
       .getFile
@@ -92,20 +92,19 @@ class BookProcessActor(file: File, title: String) extends Actor {
 
 
   def processFile() = {
-    if (BookProcessActor.verbLemmaMap != null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
+    if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
       sender ! new Exception("Wrong lemmatizer configuration"
-        + classOf[BookProcessActor].getClassLoader
-        +"|--|"
-        + classOf[BookProcessActor].getClassLoader.getParent.getResource("")
-        +"|--|"
-        + classOf[BookProcessActor].getClassLoader.getResource(".")
-        +"|--|"
-        + classOf[BookProcessActor].getClassLoader.getResource("")
-        +"|--|"
-        + classOf[BookProcessActor].getClassLoader.getResource("resource")
-        +"|--|"
-        + classOf[BookProcessActor].getClassLoader.getResource("/resource")
+        + "|--|"
+        + Play.application().classloader().getResource("")
+        + "|--|"
+        + Play.application().classloader().getResource(".")
+        + "|--|"
+        + Play.application().classloader().getResource("")
+        + "|--|"
+        + Play.application().classloader().getResource("resource")
+        + "|--|"
+        + classOf[BookProcessActor].getResource("/resource")
       );
     } else {
       sender ! "processing"
