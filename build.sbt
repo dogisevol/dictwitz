@@ -52,6 +52,10 @@ unmanagedJars in Compile ++= {
   customJars.classpath
 }
 
+mappings in Universal ++=
+  (baseDirectory.value / "resources" * "*" get) map
+    (x => x -> ("resources/" + x.getName))
+
 unmanagedClasspath in Runtime += baseDirectory.value / "resources"
 
 
