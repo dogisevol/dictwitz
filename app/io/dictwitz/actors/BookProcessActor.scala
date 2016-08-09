@@ -10,6 +10,7 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger
 import io.dictwitz.models.{BookWord, Lemma}
 import io.dictwitz.service.WordnikService
 import play.Play
+import play.api.Logger
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
@@ -17,6 +18,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 
 object BookProcessActor {
+
+  val logger = Logger(getClass)
 
   private var tags: List[String] = new ArrayList[String]()
 
@@ -49,11 +52,13 @@ object BookProcessActor {
       .getFile)
     wordNetPath = Play.application().resource("resources/WordNet-3.0/dict/")
       .getFile
+    logger.info("wordNetPath is set: " + wordNetPath)
   } catch {
     case e: Exception => System.out.print(e.toString)
   }
 
   private def loadExceptionMap(fileName: String) {
+    logger.info("Start loading exeptions map: " + fileName)
     exceptionsMap = new HashMap[String, String]()
     Source.fromFile(fileName).getLines().foreach {
       line =>
@@ -65,6 +70,7 @@ object BookProcessActor {
   }
 
   private def loadVerbMap(fileName: String) {
+    logger.info("Start loading verb map: " + fileName)
     verbLemmaMap = new HashMap[String, String]()
     verbBaseMap = new HashMap[String, String]()
     Source.fromFile(fileName).getLines().foreach {
@@ -92,7 +98,7 @@ class BookProcessActor(file: File, title: String) extends Actor {
 
 
   def processFile() = {
-    if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
+    if (BookProcessActor.verbLemmaMap != null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
       sender ! new Exception("Wrong lemmatizer configuration"
         + BookProcessActor.verbLemmaMap
