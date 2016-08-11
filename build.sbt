@@ -45,18 +45,19 @@ scalacOptions in ThisBuild ++= Seq(
 
 fork in run := false
 
-unmanagedJars in Compile ++= {
-  val base = baseDirectory.value
-  val baseDirectories = (base / "lib")
-  val customJars = (baseDirectories ** "*.jar")
-  customJars.classpath
+packageArchetype.java_server
+
+// add your config files to the classpath for running inside sbt
+unmanagedClasspath in Compile += Attributed.blank(sourceDirectory.value/"main"/"config")
+
+mappings in Universal ++= {
+  val resourcesDir = baseDirectory.value/"resources"
+  for {
+    file <- (resourcesDir ** AllPassFilter).get
+    relative <- file.relativeTo(resourcesDir.getParentFile)
+    mapping = file -> relative.getPath
+  } yield mapping
 }
-
-mappings in Universal ++=
-  (baseDirectory.value / "resources" * "*" get) map
-    (x => x -> ("resources/" + x.getName))
-
-unmanagedClasspath in Runtime += baseDirectory.value / "resources"
 
 
 herokuAppName in Compile := "still-plains-63986"
