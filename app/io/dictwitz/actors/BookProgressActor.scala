@@ -10,7 +10,7 @@ import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
 
-class BookProgressActor(file: File, title: String) extends Actor with akka.actor.ActorLogging {
+class BookProgressActor(content: String) extends Actor with akka.actor.ActorLogging {
 
   var progressChannel: Concurrent.Channel[JsValue] = null
   var processActor: ActorRef = null
@@ -41,22 +41,18 @@ class BookProgressActor(file: File, title: String) extends Actor with akka.actor
 
     case bookWords: ListBuffer[BookWord] => {
       data = bookWords
+      status = "done"
     }
 
     case errorMsg: Exception => {
       currentProgress = -1
       error = errorMsg
-      status = "Failure."
+      status = "failure"
     }
 
     case "storing" => {
       currentProgress = 0
-      status = "Storing."
-    }
-
-    case "done" => {
-      currentProgress = 100
-      status = "Done."
+      status = "storing"
     }
 
     case "progress" => {
@@ -96,9 +92,9 @@ class BookProgressActor(file: File, title: String) extends Actor with akka.actor
     }
 
     case "start" => {
-      processActor = BookController.system.actorOf(Props(new BookProcessActor(file, title)))
+      processActor = BookController.system.actorOf(Props(new BookProcessActor(content)))
       processActor ! 0
-      status = "Processing."
+      status = "processing"
     }
   }
 }

@@ -1,8 +1,6 @@
 package io.dictwitz.controllers
 
 
-import java.io.File
-
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
@@ -11,7 +9,7 @@ import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Concurrent
 import play.api.libs.json.{JsValue, Json, Writes}
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{Action, Controller, MaxSizeExceeded}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -35,15 +33,15 @@ class BookController() extends Controller {
   }
 
 
-  def bookUpload = Action { request => {
+  def bookUpload = Action(parse.urlFormEncoded(maxLength = 1024 * 1024)) { request => {
     val (progressEnumerator, progressChannel) = Concurrent.broadcast[JsValue]
     val uuid = java.util.UUID.randomUUID().toString()
-    val file = request.body.asMultipartFormData.get.files.head.ref.file
-    val newFile = new File(file.getParentFile, uuid)
-    file.renameTo(newFile)
-    val title = request.body.asMultipartFormData.get.files.head.filename
-    BookController.system.actorOf(Props(new BookProgressActor(newFile, title)), uuid) ! "start"
-    Ok(uuid);
+    if (!request.body.get("content").isEmpty) {
+      BookController.system.actorOf(Props(new BookProgressActor(request.body.get("content").get.head)), uuid) ! "start"
+      Ok(uuid);
+    } else {
+      BadRequest("Nothing to parse")
+    }
   }
   }
 

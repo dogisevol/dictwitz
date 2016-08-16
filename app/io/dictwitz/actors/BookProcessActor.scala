@@ -86,7 +86,7 @@ object BookProcessActor {
 }
 
 
-class BookProcessActor(file: File, title: String) extends Actor {
+class BookProcessActor(content: String) extends Actor {
 
   val logger = Logger(getClass)
 
@@ -103,8 +103,8 @@ class BookProcessActor(file: File, title: String) extends Actor {
     if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
       sender ! new Exception("Cannot configure lemmatizer")
-      if(BookProcessActor.verbLemmaMap == null)
-      logger.error("Wrong lemmatizer configuration")
+      if (BookProcessActor.verbLemmaMap == null)
+        logger.error("Wrong lemmatizer configuration")
     } else {
       sender ! "processing"
       try {
@@ -113,37 +113,33 @@ class BookProcessActor(file: File, title: String) extends Actor {
 
         val tagger = new MaxentTagger(url.toString)
         val map = new HashMap[String, Lemma]()
-        val fileSize = file.length
+        val contentSize = content.length
         var done = 0
-        var currentPercent = 0
-        Source.fromFile(file).getLines().foreach {
-          s =>
-            done += s.length
-            val p = (done / (fileSize / 100 + 1)).toInt
-            sender ! p
-            val sentences = MaxentTagger.tokenizeText(new StringReader(s))
-            for (sentence <- sentences) {
-              val tSentence = tagger.tagSentence(sentence)
-              for (word <- tSentence) {
-                if (word.word().size > 1 && word.word().matches("[A-Za-z]+")) {
-                  val tag = word.tag()
-                  if (BookProcessActor.tags.contains(tag)) {
-                    val lemmaStr = getLemma(word.word().toLowerCase(), tag).toLowerCase()
-                    val lemmaWord = tagger.tagSentence(MaxentTagger.tokenizeText(new StringReader(lemmaStr))
-                      .get(0))
-                      .get(0)
-                    var lemma = map.get(lemmaWord.toString)
-                    if (lemma == null) {
-                      lemma = new Lemma(lemmaWord)
-                      map.put(lemmaWord.toString, lemma)
-                    }
-                    lemma.setCount(lemma.getCount + 1)
-                  }
+        sender ! done
+        val sentences = MaxentTagger.tokenizeText(new StringReader(content))
+        for (sentence <- sentences) {
+          val tSentence = tagger.tagSentence(sentence)
+          for (word <- tSentence) {
+            if (word.word().size > 1 && word.word().matches("[A-Za-z]+")) {
+              val tag = word.tag()
+              if (BookProcessActor.tags.contains(tag)) {
+                val lemmaStr = getLemma(word.word().toLowerCase(), tag).toLowerCase()
+                val lemmaWord = tagger.tagSentence(MaxentTagger.tokenizeText(new StringReader(lemmaStr))
+                  .get(0))
+                  .get(0)
+                var lemma = map.get(lemmaWord.toString)
+                if (lemma == null) {
+                  lemma = new Lemma(lemmaWord)
+                  map.put(lemmaWord.toString, lemma)
                 }
+                lemma.setCount(lemma.getCount + 1)
               }
             }
+          }
+          done += sentence.length
+          val p = (done / (contentSize / 100 + 1)).toInt
+          sender ! p
         }
-        file.delete()
         var i = 0;
         val wordsList = ListBuffer[BookWord]()
         map.foreach { case (key, value) => {
