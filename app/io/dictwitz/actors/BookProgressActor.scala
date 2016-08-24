@@ -1,7 +1,5 @@
 package io.dictwitz.actors
 
-import java.io.File
-
 import akka.actor.{Actor, ActorRef, Props}
 import io.dictwitz.controllers.BookController
 import io.dictwitz.models.BookWord
@@ -23,6 +21,7 @@ class BookProgressActor(content: String) extends Actor with akka.actor.ActorLogg
     def writes(word: (BookWord)): JsValue = {
       Json.obj(
         "word" -> word.word,
+        "known" -> "false",
         "tag" -> word.tag,
         "freq" -> word.freq,
         "definitions" -> Json.arr(word.definition),
