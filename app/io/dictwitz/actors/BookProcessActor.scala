@@ -143,12 +143,13 @@ class BookProcessActor(content: String) extends Actor {
         var i = 0;
         val wordsList = ListBuffer[BookWord]()
         map.foreach { case (key, value) => {
-          WordnikService.getDictionaryEntry(value).onComplete(
-            result =>
-              if (result.isSuccess) {
-                wordsList += result.get
-              }
-          )
+//          WordnikService.getDictionaryEntry(value).onComplete(
+//            result =>
+//              if (result.isSuccess) {
+//                wordsList += result.get
+//              }
+//          )
+          wordsList += BookWord(value.getWord.word(), value.getWord.tag(), value.getCount, ListBuffer[String](), ListBuffer[String](), ListBuffer[String]())
           i = i + 1
           sender ! (i / (map.size() / 100 + 1))
         }

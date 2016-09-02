@@ -64,7 +64,7 @@ class BookProgressActor(content: String) extends Actor with akka.actor.ActorLogg
           )
         )
         sender ! Json.stringify(result)
-
+        context stop self
       } else if (currentProgress < 100) {
         val result: JsValue = JsObject(
           Seq(
@@ -82,7 +82,6 @@ class BookProgressActor(content: String) extends Actor with akka.actor.ActorLogg
             "data" -> Json.toJson(data)
           )
         )
-        sender ! Json.stringify(result)
         sender ! Json.stringify(result)
         if (currentProgress == 100) {
           context stop self
