@@ -14,19 +14,6 @@ class WordController() extends Controller {
 
   val logger = Logger(getClass)
 
-  //TODO extract writes
-  implicit val writer = new Writes[BookWord] {
-    def writes(word: (BookWord)): JsValue = {
-      Json.obj(
-        "word" -> word.word,
-        "definitions" -> Json.arr(word.definition),
-        "pronunciations" -> Json.arr(word.pronunciation),
-        "examples" -> Json.arr(word.example)
-      )
-    }
-  }
-
-
   def getDictionaryEntry(word: String) = Action.async { request => {
     val future = WordnikService.getDictionaryEntry(word)
 
@@ -37,8 +24,13 @@ class WordController() extends Controller {
     }
 
     future.map(
-      message =>
-        Ok(message)
+      word =>
+        Ok(      Json.obj(
+          "word" -> word.word,
+          "definitions" -> Json.arr(word.definition),
+          "pronunciations" -> Json.arr(word.pronunciation),
+          "examples" -> Json.arr(word.example)
+        ))
     )
   }
   }
