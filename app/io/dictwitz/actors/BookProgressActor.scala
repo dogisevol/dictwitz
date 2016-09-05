@@ -17,6 +17,8 @@ class BookProgressActor(content: String) extends Actor with akka.actor.ActorLogg
   var status: String = "";
   var data: ListBuffer[BookWord] = ListBuffer[BookWord]()
 
+
+  //TODO extract writes
   implicit val writer = new Writes[BookWord] {
     def writes(word: (BookWord)): JsValue = {
       Json.obj(

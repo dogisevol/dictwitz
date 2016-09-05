@@ -1,5 +1,6 @@
 package io.dictwitz.controllers
 
+import io.dictwitz.models.BookWord
 import io.dictwitz.service.WordnikService
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
@@ -13,9 +14,15 @@ class WordController() extends Controller {
 
   val logger = Logger(getClass)
 
-  implicit val writer = new Writes[(Long, String, String, Long)] {
-    def writes(t: (Long, String, String, Long)): JsValue = {
-      Json.obj("bookId" -> t._1, "word" -> t._2, "tag" -> t._3, "freq" -> t._4)
+  //TODO extract writes
+  implicit val writer = new Writes[BookWord] {
+    def writes(word: (BookWord)): JsValue = {
+      Json.obj(
+        "word" -> word.word,
+        "definitions" -> Json.arr(word.definition),
+        "pronunciations" -> Json.arr(word.pronunciation),
+        "examples" -> Json.arr(word.example)
+      )
     }
   }
 
