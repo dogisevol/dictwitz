@@ -5,7 +5,6 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import io.dictwitz.actors.BookProgressActor
-import io.dictwitz.models.BookWord
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Concurrent
@@ -30,12 +29,6 @@ class BookController() extends Controller {
   implicit val writer = new Writes[(Long, String, String, Long)] {
     def writes(t: (Long, String, String, Long)): JsValue = {
       Json.obj("bookId" -> t._1, "word" -> t._2, "tag" -> t._3, "freq" -> t._4)
-    }
-  }
-
-  implicit val wordWriter = new Writes[(BookWord)] {
-    def writes(t: (BookWord)): JsValue = {
-      Json.obj("bookId" -> t., "word" -> t._2, "tag" -> t._3, "freq" -> t._4)
     }
   }
 
