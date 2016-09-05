@@ -69,10 +69,17 @@ object WordnikService {
     )
   }
 
-  def getDictionaryEntry(lemma: Lemma): Future[BookWord] = Future successful {
-    val result = BookWord(lemma.getWord.word(), lemma.getWord.tag(), lemma.getCount, ListBuffer[String](),
+  def getDictionaryEntry(word: String): Future[BookWord] = {
+    getDictionaryEntry(word, "", 0)
+  }
+
+  def getDictionaryEntry(lemma: Lemma): Future[BookWord] = {
+    getDictionaryEntry(lemma.getWord.word(), lemma.getWord.tag(), lemma.getCount)
+  }
+
+  def getDictionaryEntry(word: String, tag: String, count: Long): Future[BookWord] = Future successful {
+    val result = BookWord(word, tag, count, ListBuffer[String](),
       ListBuffer[String](), ListBuffer[String]())
-    val word: String = lemma.getWord.word()
     getDefinitions(word) onSuccess {
       case wordDefinitions => wordDefinitions.foreach(
         text =>

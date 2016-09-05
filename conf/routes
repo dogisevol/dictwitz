@@ -1,2 +1,3 @@
 POST       /bookUpload                @io.dictwitz.controllers.BookController.bookUpload
 GET       /bookUpload                @io.dictwitz.controllers.BookController.bookProcessProgress(uuid: String)
+GET       /dictionary                @io.dictwitz.controllers.WordController.getDictionaryEntry(word: String)
