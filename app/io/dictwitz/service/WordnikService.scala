@@ -5,17 +5,20 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.stream.ActorMaterializer
 import io.dictwitz.models._
+import play.api.Logger
 import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object WordnikService {
 
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
+  val logger = Logger(getClass)
 
 
   private def getRequest(word: String, operation: String, map: Map[String, String]): HttpRequest = {
@@ -80,24 +83,33 @@ object WordnikService {
   def getDictionaryEntry(word: String, tag: String, count: Long): Future[BookWord] = Future successful {
     val result = BookWord(word, tag, count, ListBuffer[String](),
       ListBuffer[String](), ListBuffer[String]())
-    getDefinitions(word) onSuccess {
-      case wordDefinitions => wordDefinitions.foreach(
+    val definition = getDefinitions(word) onComplete {
+      case Success(wordDefinitions) => wordDefinitions.foreach(
         text =>
           result.definition += text
       )
+      case Failure(t) =>
+        logger.error("Cannot get definition for the word " + word, t)
     }
 
-    getPronunciations(word) onSuccess {
-      case wordPronunciation =>
+
+    getPronunciations(word) onComplete {
+      case Success(wordPronunciation) =>
         if (wordPronunciation.isDefined) {
           result.pronunciation += wordPronunciation.get
         }
+      case Failure(t) =>
+        logger.error("Cannot get definition for the word " + word, t)
+
     }
 
-    getTopExample(word) onSuccess {
-      case wordExample =>
+    getTopExample(word) onComplete {
+      case Success(wordExample) =>
         if (wordExample.isDefined)
           result
+      case Failure(t) =>
+        logger.error("Cannot get definition for the word " + word, t)
+
     }
     result
   }
