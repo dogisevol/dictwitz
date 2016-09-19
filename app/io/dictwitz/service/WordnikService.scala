@@ -43,6 +43,7 @@ object WordnikService {
 
   def transformDefinitions(node: JsValue): List[String] = {
     val result: ListBuffer[String] = ListBuffer()
+    logger.info("Transofming node: " + Json.stringify(node))
     (node \\ "text").foreach(
       text =>
         result += text.as[String]
@@ -105,8 +106,9 @@ object WordnikService {
 
     getTopExample(word) onComplete {
       case Success(wordExample) =>
-        if (wordExample.isDefined)
-          result
+        if (wordExample.isDefined) {
+          result.example += wordExample.get
+        }
       case Failure(t) =>
         logger.error("Cannot get definition for the word " + word, t)
 
