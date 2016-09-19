@@ -89,8 +89,11 @@ object WordnikService {
       case Success(wordDefinitions) => {
         logger.debug("Word definitions: " + wordDefinitions)
         wordDefinitions.foreach(
-          text =>
+          text => {
             result.definition += text
+            logger.debug("Add definition: " + text)
+            logger.debug("Book word: " + result.toString)
+          }
         )
       }
       case Failure(t) =>
@@ -119,6 +122,7 @@ object WordnikService {
         logger.error("Cannot get definition for the word " + word, t)
 
     }
+    logger.debug("Book word: " + result.toString)
     result
   }
 
