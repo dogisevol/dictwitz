@@ -43,11 +43,12 @@ object WordnikService {
 
   def transformDefinitions(node: JsValue): List[String] = {
     val result: ListBuffer[String] = ListBuffer()
-    logger.info("Transofming node: " + Json.stringify(node))
+    logger.debug("Transforming node: " + Json.stringify(node))
     (node \\ "text").foreach(
       text =>
         result += text.as[String]
     )
+    logger.debug("Transforming node results: " + result)
     result.toList
   }
 
@@ -84,14 +85,19 @@ object WordnikService {
   def getDictionaryEntry(word: String, tag: String, count: Long): Future[BookWord] = Future successful {
     val result = BookWord(word, tag, count, ListBuffer[String](),
       ListBuffer[String](), ListBuffer[String]())
-    val definition = getDefinitions(word) onComplete {
-      case Success(wordDefinitions) => wordDefinitions.foreach(
-        text =>
-          result.definition += text
-      )
+    getDefinitions(word) onComplete {
+      case Success(wordDefinitions) => {
+        logger.debug("Word definitions: " + wordDefinitions)
+        wordDefinitions.foreach(
+          text =>
+            result.definition += text
+        )
+      }
       case Failure(t) =>
         logger.error("Cannot get definition for the word " + word, t)
     }
+
+    logger.debug("Book word: " + result.toString)
 
 
     getPronunciations(word) onComplete {
