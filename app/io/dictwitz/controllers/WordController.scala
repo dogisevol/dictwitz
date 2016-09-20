@@ -15,26 +15,19 @@ class WordController() extends Controller {
 
   def getDictionaryEntry(word: String) = Action.async { request => {
     val future = WordnikService.getDictionaryEntry(word)
-
-    future onFailure {
-      case actorRef => {
-        InternalServerError("failure")
-      }
+    future.map(word => {
+      logger.debug("Ready to send the word: " + word)
+      val result = Json.obj(
+        "word" -> word.word,
+        "definitions" -> Json.arr(word.definition),
+        "pronunciations" -> Json.arr(word.pronunciation),
+        "examples" -> Json.arr(word.example)
+      )
+      Ok(Json.stringify(result))
+    }).recover {
+      case _ =>
+        InternalServerError
     }
-
-    future.map(
-      word => {
-        logger.debug("Ready to send the word: " + word)
-        val result = Json.obj(
-          "word" -> word.word,
-          "definitions" -> Json.arr(word.definition),
-          "pronunciations" -> Json.arr(word.pronunciation),
-          "examples" -> Json.arr(word.example)
-        )
-        logger.debug("Word json object is: " + Json.stringify(result))
-        Ok(result)
-      }
-    )
   }
   }
 }
