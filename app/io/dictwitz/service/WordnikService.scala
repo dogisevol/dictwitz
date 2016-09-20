@@ -12,7 +12,6 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 object WordnikService {
 
@@ -82,48 +81,38 @@ object WordnikService {
     getDictionaryEntry(lemma.getWord.word(), lemma.getWord.tag(), lemma.getCount)
   }
 
-  def getDictionaryEntry(word: String, tag: String, count: Long): Future[BookWord] = Future successful {
+  def getDictionaryEntry(word: String, tag: String, count: Long): Future[BookWord] = {
     val result = BookWord(word, tag, count, ListBuffer[String](),
       ListBuffer[String](), ListBuffer[String]())
-    getDefinitions(word) onComplete {
-      case Success(wordDefinitions) => {
-        logger.debug("Word definitions: " + wordDefinitions)
-        wordDefinitions.foreach(
-          text => {
-            result.definition += text
-            logger.debug("Add definition: " + text)
-            logger.debug("Book word: " + result.toString)
-          }
-        )
-      }
-      case Failure(t) =>
-        logger.error("Cannot get definition for the word " + word, t)
-    }
-
-    logger.debug("Book word: " + result.toString)
-
-
-    getPronunciations(word) onComplete {
-      case Success(wordPronunciation) =>
+    getDefinitions(word).map(wordDefinitions => {
+      logger.debug("Word definitions: " + wordDefinitions)
+      wordDefinitions.foreach(
+        text => {
+          result.definition += text
+          logger.debug("Add definition: " + text)
+          logger.debug("Book word: " + result.toString)
+        }
+      )
+      getPronunciations(word).map(wordPronunciation => {
         if (wordPronunciation.isDefined) {
           result.pronunciation += wordPronunciation.get
         }
-      case Failure(t) =>
-        logger.error("Cannot get definition for the word " + word, t)
 
+        getTopExample(word).map(wordExample => {
+          if (wordExample.isDefined) {
+            result.example += wordExample.get
+          }
+        })
+      }).recover {
+        case _ =>
+          logger.error("Cannot get definition for the word " + word, _)
+          result
+      }
+      result
+    }).recover {
+      case _ =>
+        logger.error("Cannot get definition for the word " + word, _)
+        result
     }
-
-    getTopExample(word) onComplete {
-      case Success(wordExample) =>
-        if (wordExample.isDefined) {
-          result.example += wordExample.get
-        }
-      case Failure(t) =>
-        logger.error("Cannot get definition for the word " + word, t)
-
-    }
-    logger.debug("Book word: " + result.toString)
-    result
   }
-
 }
