@@ -102,17 +102,21 @@ object WordnikService {
           if (wordExample.isDefined) {
             result.example += wordExample.get
           }
-        })
+        }).recover {
+          case e: Exception =>
+            logger.error("Cannot get example for the word " + word, e)
+            throw e
+        }
       }).recover {
-        case _ =>
-          logger.error("Cannot get definition for the word " + word, _)
-          result
+        case e: Exception =>
+          logger.error("Cannot get pronunciation for the word " + word, e)
+          throw e
       }
       result
     }).recover {
-      case _ =>
-        logger.error("Cannot get definition for the word " + word, _)
-        result
+      case e: Exception =>
+        logger.error("Cannot get definition for the word " + word, e)
+        throw e
     }
   }
 }
