@@ -42,12 +42,10 @@ object WordnikService {
 
   def transformDefinitions(node: JsValue): List[String] = {
     val result: ListBuffer[String] = ListBuffer()
-    logger.debug("Transforming node: " + Json.stringify(node))
     (node \\ "text").foreach(
       text =>
         result += text.as[String]
     )
-    logger.debug("Transforming node results: " + result)
     result.toList
   }
 
@@ -61,15 +59,19 @@ object WordnikService {
 
   def getPronunciations(word: String): Future[Option[String]] = {
     getResponse(word, "pronunciations").map(
-      node =>
+      node => {
+        logger.debug("pronunciations: " + Json.stringify(node))
         (node \\ "raw").head.asOpt[String]
+      }
     )
   }
 
   def getTopExample(word: String): Future[Option[String]] = {
     getResponse(word, "topExample").map(
-      node =>
+      node => {
+        logger.debug("topExample: " + Json.stringify(node))
         (node \ "text").asOpt[String]
+      }
     )
   }
 
