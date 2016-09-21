@@ -15,14 +15,12 @@ class WordController() extends Controller {
 
   def getDictionaryEntry(word: String) = Action.async { request => {
     WordnikService.getDictionaryEntry(word).map(word => {
-      logger.debug("________________Ready to send the word: " + word)
       val result = Json.obj(
         "word" -> word.word,
-        "definitions" -> Json.arr(word.definition),
-        "pronunciations" -> Json.arr(word.pronunciation),
-        "examples" -> Json.arr(word.example)
+        "definitions" -> word.definition,
+        "pronunciations" -> word.pronunciation,
+        "examples" -> word.example
       )
-      logger.debug("________________Ready to send the word: " + Json.stringify(result))
       Ok(Json.stringify(result))
     }).recover {
       case _ =>
