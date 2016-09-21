@@ -91,13 +91,6 @@ object WordnikService {
       ListBuffer[String](), ListBuffer[String]())
     getDefinitions(word).map(wordDefinitions => {
       logger.debug("Word definitions: " + wordDefinitions)
-      wordDefinitions.foreach(
-        text => {
-          result.definition += text
-          logger.debug("Add definition: " + text)
-          logger.debug("Book word: " + result.toString)
-        }
-      )
       getPronunciations(word).map(wordPronunciation => {
         if (wordPronunciation.isDefined) {
           result.pronunciation += wordPronunciation.get
@@ -117,6 +110,13 @@ object WordnikService {
           logger.error("Cannot get pronunciation for the word " + word, e)
           throw e
       }
+      wordDefinitions.foreach(
+        text => {
+          result.definition += text
+          logger.debug("Add definition: " + text)
+          logger.debug("Book word: " + result.toString)
+        }
+      )
       result
     }).recover {
       case e: Exception =>
