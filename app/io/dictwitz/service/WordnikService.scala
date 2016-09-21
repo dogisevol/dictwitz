@@ -61,7 +61,10 @@ object WordnikService {
     getResponse(word, "pronunciations").map(
       node => {
         logger.debug("pronunciations: " + Json.stringify(node))
-        (node \\ "raw").head.asOpt[String]
+        (node \\ "raw") match {
+          case Nil => None
+          case head :: _ => head.asOpt[String]
+        }
       }
     )
   }

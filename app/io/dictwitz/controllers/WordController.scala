@@ -23,7 +23,8 @@ class WordController() extends Controller {
       )
       Ok(Json.stringify(result))
     }).recover {
-      case _ =>
+      case e: Exception =>
+        logger.error("Cannot get the definitions", e)
         InternalServerError
     }
   }
