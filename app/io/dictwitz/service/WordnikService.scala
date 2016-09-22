@@ -89,39 +89,23 @@ object WordnikService {
   def getDictionaryEntry(word: String, tag: String, count: Long): Future[BookWord] = {
     val result = BookWord(word, tag, count, ListBuffer[String](),
       ListBuffer[String](), ListBuffer[String]())
-    getDefinitions(word).map(wordDefinitions => {
-      logger.debug("Word definitions: " + wordDefinitions)
-      getPronunciations(word).map(wordPronunciation => {
+    getDefinitions(word).flatMap(wordDefinitions => {
+      wordDefinitions.foreach(
+        text => {
+          result.definition += text
+        }
+      )
+      getPronunciations(word).flatMap(wordPronunciation => {
         if (wordPronunciation.isDefined) {
           result.pronunciation += wordPronunciation.get
         }
-
         getTopExample(word).map(wordExample => {
           if (wordExample.isDefined) {
             result.example += wordExample.get
           }
-        }).recover {
-          case e: Exception =>
-            logger.error("Cannot get example for the word " + word, e)
-            throw e
-        }
-      }).recover {
-        case e: Exception =>
-          logger.error("Cannot get pronunciation for the word " + word, e)
-          throw e
-      }
-      wordDefinitions.foreach(
-        text => {
-          result.definition += text
-          logger.debug("Add definition: " + text)
-          logger.debug("Book word: " + result.toString)
-        }
-      )
-      result
-    }).recover {
-      case e: Exception =>
-        logger.error("Cannot get definition for the word " + word, e)
-        throw e
-    }
+          result
+        })
+      })
+    })
   }
 }
