@@ -5,6 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, Uri}
 import akka.stream.ActorMaterializer
 import io.dictwitz.models._
+import play.api.Logger
 import play.api.libs.json._
 
 import scala.collection.mutable.ListBuffer
@@ -16,6 +17,7 @@ object WordnikService {
 
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
+  val logger = Logger(getClass)
 
 
   private def getRequest(word: String, operation: String, map: Map[String, String]): HttpRequest = {
@@ -57,42 +59,53 @@ object WordnikService {
 
   def getPronunciations(word: String): Future[Option[String]] = {
     getResponse(word, "pronunciations").map(
-      node =>
-        (node \\ "raw").head.asOpt[String]
+      node => {
+        logger.debug("pronunciations: " + Json.stringify(node))
+        (node \\ "raw").toList match {
+          case Nil => None
+          case head :: _ => head.asOpt[String]
+        }
+      }
     )
   }
 
   def getTopExample(word: String): Future[Option[String]] = {
     getResponse(word, "topExample").map(
-      node =>
+      node => {
+        logger.debug("topExample: " + Json.stringify(node))
         (node \ "text").asOpt[String]
+      }
     )
   }
 
-  def getDictionaryEntry(lemma: Lemma): Future[BookWord] = Future successful {
-    val result = BookWord(lemma.getWord.word(), lemma.getWord.tag(), lemma.getCount, ListBuffer[String](),
-      ListBuffer[String](), ListBuffer[String]())
-    val word: String = lemma.getWord.word()
-    getDefinitions(word) onSuccess {
-      case wordDefinitions => wordDefinitions.foreach(
-        text =>
-          result.definition += text
-      )
-    }
+  def getDictionaryEntry(word: String): Future[BookWord] = {
+    getDictionaryEntry(word, "", 0)
+  }
 
-    getPronunciations(word) onSuccess {
-      case wordPronunciation =>
+  def getDictionaryEntry(lemma: Lemma): Future[BookWord] = {
+    getDictionaryEntry(lemma.getWord.word(), lemma.getWord.tag(), lemma.getCount)
+  }
+
+  def getDictionaryEntry(word: String, tag: String, count: Long): Future[BookWord] = {
+    val result = BookWord(word, tag, count, ListBuffer[String](),
+      ListBuffer[String](), ListBuffer[String]())
+    getDefinitions(word).flatMap(wordDefinitions => {
+      wordDefinitions.foreach(
+        text => {
+          result.definition += text
+        }
+      )
+      getPronunciations(word).flatMap(wordPronunciation => {
         if (wordPronunciation.isDefined) {
           result.pronunciation += wordPronunciation.get
         }
-    }
-
-    getTopExample(word) onSuccess {
-      case wordExample =>
-        if (wordExample.isDefined)
+        getTopExample(word).map(wordExample => {
+          if (wordExample.isDefined) {
+            result.example += wordExample.get
+          }
           result
-    }
-    result
+        })
+      })
+    })
   }
-
 }

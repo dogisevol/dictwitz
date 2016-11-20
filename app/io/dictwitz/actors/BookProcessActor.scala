@@ -8,13 +8,12 @@ import edu.illinois.cs.cogcomp.edison.utilities.POSUtils
 import edu.illinois.cs.cogcomp.nlp.lemmatizer.{MorphaStemmer, WordnetLemmaReader}
 import edu.stanford.nlp.tagger.maxent.MaxentTagger
 import io.dictwitz.models.{BookWord, Lemma}
-import io.dictwitz.service.WordnikService
 import play.Play
 import play.api.Logger
+import play.api.libs.json.{JsValue, Json, Writes}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 
 object BookProcessActor {
@@ -31,18 +30,14 @@ object BookProcessActor {
 
   private var wordNetPath: String = null
 
+  private var tagger: MaxentTagger = null
+
   tags.add("FW")
-
   tags.add("JJ")
-
   tags.add("NN")
-
   tags.add("RB")
-
   tags.add("VB")
-
   tags.add("VBN")
-
   tags.add("VBP")
 
   try {
@@ -50,8 +45,7 @@ object BookProcessActor {
     loadExceptionMap(Play.application().getFile("resources/exceptions.txt"))
     wordNetPath = Play.application().getFile("resources/WordNet-3.0/dict/")
       .getAbsolutePath
-    logger.info("wordNetPath is set: " + wordNetPath)
-    logger.info("wordNetPath is dir: " + Play.application().getFile("resources/WordNet-3.0/dict/").isDirectory)
+    tagger = new MaxentTagger(Play.application().getFile("resources/models/wsj-0-18-left3words-distsim.tagger").toString)
   } catch {
     case e: Exception => logger.error("Cannot initialize lemmatizer", e)
   }
@@ -86,7 +80,7 @@ object BookProcessActor {
 }
 
 
-class BookProcessActor(file: File, title: String) extends Actor {
+class BookProcessActor(content: String) extends Actor {
 
   val logger = Logger(getClass)
 
@@ -103,62 +97,70 @@ class BookProcessActor(file: File, title: String) extends Actor {
     if (BookProcessActor.verbLemmaMap == null || BookProcessActor.verbBaseMap == null || BookProcessActor.exceptionsMap == null ||
       BookProcessActor.wordNetPath == null) {
       sender ! new Exception("Cannot configure lemmatizer")
-      if(BookProcessActor.verbLemmaMap == null)
-      logger.error("Wrong lemmatizer configuration")
+      if (BookProcessActor.verbLemmaMap == null)
+        logger.error("Wrong lemmatizer configuration")
     } else {
       sender ! "processing"
       try {
-        val url = Play.application().getFile("resources/models/wsj-0-18-left3words-distsim.tagger")
         init()
-
-        val tagger = new MaxentTagger(url.toString)
         val map = new HashMap[String, Lemma]()
-        val fileSize = file.length
+        val contentSize = content.length
         var done = 0
-        var currentPercent = 0
-        Source.fromFile(file).getLines().foreach {
-          s =>
-            done += s.length
-            val p = (done / (fileSize / 100 + 1)).toInt
-            sender ! p
-            val sentences = MaxentTagger.tokenizeText(new StringReader(s))
-            for (sentence <- sentences) {
-              val tSentence = tagger.tagSentence(sentence)
-              for (word <- tSentence) {
-                if (word.word().size > 1 && word.word().matches("[A-Za-z]+")) {
-                  val tag = word.tag()
-                  if (BookProcessActor.tags.contains(tag)) {
-                    val lemmaStr = getLemma(word.word().toLowerCase(), tag).toLowerCase()
-                    val lemmaWord = tagger.tagSentence(MaxentTagger.tokenizeText(new StringReader(lemmaStr))
-                      .get(0))
-                      .get(0)
-                    var lemma = map.get(lemmaWord.toString)
-                    if (lemma == null) {
-                      lemma = new Lemma(lemmaWord)
-                      map.put(lemmaWord.toString, lemma)
-                    }
-                    lemma.setCount(lemma.getCount + 1)
-                  }
+        sender ! done
+        val sentences = MaxentTagger.tokenizeText(new StringReader(content))
+        for (sentence <- sentences) {
+          val tSentence = BookProcessActor.tagger.tagSentence(sentence)
+          for (word <- tSentence) {
+            if (word.word().size > 1 && word.word().matches("[A-Za-z]+")) {
+              val tag = word.tag()
+              if (BookProcessActor.tags.contains(tag)) {
+                val lemmaStr = getLemma(word.word().toLowerCase(), tag).toLowerCase()
+                val lemmaWord = BookProcessActor.tagger.tagSentence(MaxentTagger.tokenizeText(new StringReader(lemmaStr))
+                  .get(0))
+                  .get(0)
+                var lemma = map.get(lemmaWord.toString)
+                if (lemma == null) {
+                  lemma = new Lemma(lemmaWord)
+                  map.put(lemmaWord.toString, lemma)
                 }
+                lemma.setCount(lemma.getCount + 1)
               }
             }
+          }
+          done += sentence.length
+          val p = (done / (contentSize / 100 + 1)).toInt
+          logger.info("Parsed: " + p + " %")
+          sender ! p
         }
-        file.delete()
         var i = 0;
         val wordsList = ListBuffer[BookWord]()
+        logger.info("End parsing")
         map.foreach { case (key, value) => {
-          WordnikService.getDictionaryEntry(value).onComplete(
-            result =>
-              if (result.isSuccess) {
-                wordsList += result.get
-              }
-          )
+          //          WordnikService.getDictionaryEntry(value).onComplete(
+          //            result =>
+          //              if (result.isSuccess) {
+          //                wordsList += result.get
+          //              }
+          //          )
+          wordsList += BookWord(value.getWord.word(), value.getWord.tag(), value.getCount, ListBuffer[String](), ListBuffer[String](), ListBuffer[String]())
           i = i + 1
           sender ! (i / (map.size() / 100 + 1))
         }
         }
 
-        sender ! wordsList
+
+        //TODO extract writes
+        implicit val writer = new Writes[BookWord] {
+          def writes(word: (BookWord)): JsValue = {
+            Json.obj(
+              "word" -> word.word,
+              "tag" -> word.tag,
+              "freq" -> word.freq
+            )
+          }
+        }
+
+        sender ! Json.toJson(wordsList)
         sender ! 100
         context stop self
       } catch {
